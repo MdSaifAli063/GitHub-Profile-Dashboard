@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GitHub Profile — Modern Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="card.css" />
+</head>
+<body>
+  <div class="bg-anim"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-container">
+        <div class="brand">
+          <div class="logo">GH</div>
+          <div>
+            <h1 style="font-size:24px;margin:0;color:var(--text-dark);font-weight:700">GitHub Profile Dashboard</h1>
+            <p style="margin:0;color:var(--text-medium);font-size:13px;font-weight:500">Modern & Beautiful Interface</p>
+          </div>
+        </div>
+        <div class="nav-search">
+          <input id="usernameInput" class="nav-search-input" placeholder="Enter GitHub username" value="octocat" />
+          <button id="showBtn" class="nav-btn"><span>Search</span></button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+
+      <!-- Profile Row -->
+      <div class="content-row two-cols">
+        <div class="left float-slow">
+          <div class="avatar"><img id="avatar" src="https://github.com/octocat.png" alt="avatar"/></div>
+          <div class="name" id="fullName">The Octocat</div>
+          <div class="handle" id="login">@octocat</div>
+          <div class="bio" id="bio">Friendly GitHub mascot bridging people and code.</div>
+
+          <div class="stats"><div class="stat"><b id="followers">0</b><span>Followers</span></div><div class="stat"><b id="following">0</b><span>Following</span></div><div class="stat"><b id="reposCount">0</b><span>Repos</span></div></div>
+
+          <div class="trophies" id="trophiesWrap"><h4>🏆 GitHub Trophies</h4><img id="trophiesImg" src="https://github-profile-trophy.vercel.app/?username=octocat&theme=flat&no-frame=true" alt="trophies"/></div>
+
+          <div class="section">
+            <h3>📊 Contribution Graph</h3>
+            <img id="contribGraph" class="contribution-graph" src="" alt="Contribution Graph" style="display:none"/>
+            <div id="contribGraphPlaceholder" style="color:var(--text-medium);text-align:center;padding:20px">Contribution graph will appear here</div>
+          </div>
+
+          <div class="section">
+            <h3>💻 Programming Languages</h3>
+            <div class="languages" id="languagesList"><div style="color:var(--text-medium)">Analyzing languages...</div></div>
+          </div>
+        </div>
+
+        <div class="right">
+          <div class="section float-slow">
+            <h3>Achievements</h3>
+            <div class="achievements" id="achievementsWrap"><div style="color:var(--text-medium)">Loading…</div></div>
+          </div>
+
+          <div class="section">
+            <h3>Top Repositories</h3>
+            <div class="repos" id="reposList"><div style="color:var(--text-medium)">Loading repos…</div></div>
+          </div>
+
+          <div class="section">
+            <h3>Other stats</h3>
+            <div class="stats-row"><div class="small-chip" id="totalStars">★ 0</div><div class="small-chip" id="forksCount">🍴 0</div><div class="small-chip" id="largestRepo">🏷️ Largest: —</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity & Links Row -->
+      <div class="content-row">
+        <div class="section">
+          <h3>📈 Activity Statistics</h3>
+          <div class="activity-stats" id="activityStats">
+            <div class="activity-item"><b id="totalCommits">0</b><span>Total Commits</span></div>
+            <div class="activity-item"><b id="thisYearCommits">0</b><span>This Year</span></div>
+            <div class="activity-item"><b id="avgRepoSize">0 KB</b><span>Avg Repo Size</span></div>
+            <div class="activity-item"><b id="mostUsedLang">—</b><span>Top Language</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>🔗 Profile Links</h3>
+          <div class="social-links" id="socialLinks"><div style="color:var(--text-medium)">Loading links...</div></div>
+    </div>
+  </div>
+
+      <!-- Footer -->
+      <footer class="footer" style="margin-top:60px;padding-top:32px;border-top:2px solid var(--border);text-align:center;color:var(--text-medium);font-size:14px">
+        Made with ❤️ • Data from GitHub API • Modern Dashboard
+      </footer>
+    </div>
+  </main>
+
+  <script src="card.js"></script>
+</body>
+</html>
