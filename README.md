@@ -7,6 +7,9 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
+---
+![image](https://github.com/MdSaifAli063/GitHub-Profile-Dashboard/blob/4e1f590e0e272528fe6ec013f80ce6c2024366b6/Screenshot%202025-11-05%20012257_edited.png)
+
 ## ✨ Features
 
 ### 🎯 Core Features
