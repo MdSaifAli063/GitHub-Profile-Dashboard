@@ -11,6 +11,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 ![image](https://github.com/MdSaifAli063/GitHub-Profile-Dashboard/blob/4e1f590e0e272528fe6ec013f80ce6c2024366b6/Screenshot%202025-11-05%20012257_edited.png)
 ![image](https://github.com/MdSaifAli063/GitHub-Profile-Dashboard/blob/8a758989be35366d8846e919e8cf218afc4c60a8/Screenshot%202025-11-05%20012642_edited.png)
 
+
 ## ✨ Features
 
 ### 🎯 Core Features
