@@ -119,6 +119,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 - ✅ Edge (latest)
 - ✅ Mobile browsers (iOS Safari, Chrome Mobile)
 
+
 ## 📁 Project Structure
 
 ```
