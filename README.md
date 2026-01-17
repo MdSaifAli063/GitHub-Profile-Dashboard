@@ -92,6 +92,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
      - Activity statistics
      - Social links
 
+
 ## 🎨 Design Features
 
 - **Light Theme**: Beautiful, modern light theme with excellent readability
