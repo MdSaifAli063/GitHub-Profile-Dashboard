@@ -185,6 +185,7 @@ This project is open source and available for personal and commercial use.
 - **GitHub Readme Activity Graph** for contribution graphs
 - **Poppins Font** from Google Fonts
 
+
 ## 📊 Features Breakdown
 
 ### Profile Information
