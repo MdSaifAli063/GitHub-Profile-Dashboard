@@ -34,6 +34,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 - **🎨 Modern UI**: Clean, light-themed design with smooth animations
 - **📱 Responsive Design**: Fully responsive layout for all screen sizes
 
+
 ## 🚀 Getting Started
 
 ### Prerequisites
