@@ -102,6 +102,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 - **Color-Coded Elements**: Visual language indicators and status badges
 - **Interactive Elements**: Hover effects on cards, buttons, and links
 
+
 ## 🛠️ Technical Details
 
 ### Technologies Used
