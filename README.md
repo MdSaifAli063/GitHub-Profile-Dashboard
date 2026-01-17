@@ -220,6 +220,7 @@ This project is open source and available for personal and commercial use.
 - ✅ Twitter profile (if available)
 - ✅ Location with map link
 
+
 ## 🎯 Future Enhancements
 
 Potential features for future versions:
