@@ -172,6 +172,7 @@ Contributions are welcome! Here are some ways you can help:
 3. **Improve Code**: Submit pull requests with improvements
 4. **Documentation**: Help improve documentation
 
+
 ## 📝 License
 
 This project is open source and available for personal and commercial use.
