@@ -177,6 +177,7 @@ Contributions are welcome! Here are some ways you can help:
 
 This project is open source and available for personal and commercial use.
 
+
 ## 🙏 Acknowledgments
 
 - **GitHub API** for providing the data
