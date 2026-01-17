@@ -162,6 +162,7 @@ Adjust the grid columns in the `.cols` and `.row-container` classes:
 - Some users may have rate limiting restrictions (GitHub API)
 - Contribution graph may not be available for all users
 
+
 ## 🤝 Contributing
 
 Contributions are welcome! Here are some ways you can help:
