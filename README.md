@@ -233,6 +233,7 @@ Potential features for future versions:
 - [ ] Star history graph
 - [ ] Issue and PR statistics
 
+
 ## 📞 Support
 
 If you have any questions or need help:
