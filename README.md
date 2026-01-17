@@ -68,6 +68,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
    - Click "Show" or press Enter
    - Enjoy the beautiful profile dashboard!
 
+
 ## 📖 Usage
 
 1. **Search for a User**
