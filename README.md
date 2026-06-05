@@ -8,8 +8,10 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
 ---
+
 ![image](https://github.com/MdSaifAli063/GitHub-Profile-Dashboard/blob/4e1f590e0e272528fe6ec013f80ce6c2024366b6/Screenshot%202025-11-05%20012257_edited.png)
 ![image](https://github.com/MdSaifAli063/GitHub-Profile-Dashboard/blob/8a758989be35366d8846e919e8cf218afc4c60a8/Screenshot%202025-11-05%20012642_edited.png)
+
 
 ## ✨ Features
 
@@ -31,6 +33,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 - **🔗 Social Links**: Quick access to GitHub profile, website, Twitter, and location
 - **🎨 Modern UI**: Clean, light-themed design with smooth animations
 - **📱 Responsive Design**: Fully responsive layout for all screen sizes
+
 
 ## 🚀 Getting Started
 
@@ -65,6 +68,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
    - Click "Show" or press Enter
    - Enjoy the beautiful profile dashboard!
 
+
 ## 📖 Usage
 
 1. **Search for a User**
@@ -88,6 +92,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
      - Activity statistics
      - Social links
 
+
 ## 🎨 Design Features
 
 - **Light Theme**: Beautiful, modern light theme with excellent readability
@@ -96,6 +101,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 - **Responsive Grid**: Adaptive grid layout that works on all devices
 - **Color-Coded Elements**: Visual language indicators and status badges
 - **Interactive Elements**: Hover effects on cards, buttons, and links
+
 
 ## 🛠️ Technical Details
 
@@ -117,6 +123,7 @@ A modern, beautiful, and feature-rich GitHub profile viewer built with pure HTML
 - ✅ Safari (latest)
 - ✅ Edge (latest)
 - ✅ Mobile browsers (iOS Safari, Chrome Mobile)
+
 
 ## 📁 Project Structure
 
@@ -155,6 +162,7 @@ Adjust the grid columns in the `.cols` and `.row-container` classes:
 - Some users may have rate limiting restrictions (GitHub API)
 - Contribution graph may not be available for all users
 
+
 ## 🤝 Contributing
 
 Contributions are welcome! Here are some ways you can help:
@@ -164,9 +172,11 @@ Contributions are welcome! Here are some ways you can help:
 3. **Improve Code**: Submit pull requests with improvements
 4. **Documentation**: Help improve documentation
 
+
 ## 📝 License
 
 This project is open source and available for personal and commercial use.
+
 
 ## 🙏 Acknowledgments
 
@@ -174,6 +184,7 @@ This project is open source and available for personal and commercial use.
 - **GitHub Profile Trophy** service for trophy images
 - **GitHub Readme Activity Graph** for contribution graphs
 - **Poppins Font** from Google Fonts
+
 
 ## 📊 Features Breakdown
 
@@ -209,6 +220,7 @@ This project is open source and available for personal and commercial use.
 - ✅ Twitter profile (if available)
 - ✅ Location with map link
 
+
 ## 🎯 Future Enhancements
 
 Potential features for future versions:
@@ -221,12 +233,14 @@ Potential features for future versions:
 - [ ] Star history graph
 - [ ] Issue and PR statistics
 
+
 ## 📞 Support
 
 If you have any questions or need help:
 - Open an issue on GitHub
 - Check existing issues for solutions
 - Review the code comments for technical details
+
 
 ## ⚡ Performance
 
