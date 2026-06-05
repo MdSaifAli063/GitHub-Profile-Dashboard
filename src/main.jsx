@@ -48,14 +48,27 @@ function sortLanguages(repos) {
 function getStats(repos) {
   const totalStars = repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0);
   const totalForks = repos.reduce((sum, repo) => sum + (repo.forks_count || 0), 0);
+  const totalWatchers = repos.reduce((sum, repo) => sum + (repo.watchers_count || 0), 0);
+  const totalOpenIssues = repos.reduce((sum, repo) => sum + (repo.open_issues_count || 0), 0);
   const totalSize = repos.reduce((sum, repo) => sum + (repo.size || 0), 0);
   const largestRepo = repos.slice().sort((a, b) => (b.size || 0) - (a.size || 0))[0];
+  const topContributedRepo = repos
+    .slice()
+    .sort((a, b) => ((b.stargazers_count || 0) * 3 + (b.forks_count || 0) * 2 + (b.watchers_count || 0)) - ((a.stargazers_count || 0) * 3 + (a.forks_count || 0) * 2 + (a.watchers_count || 0)))[0];
   const languages = sortLanguages(repos);
+  const recentActivity = repos.filter((repo) => {
+    const date = new Date(repo.pushed_at || repo.updated_at || 0);
+    return Date.now() - date.getTime() < 90 * 24 * 60 * 60 * 1000;
+  }).length;
 
   return {
     totalStars,
     totalForks,
+    totalWatchers,
+    totalOpenIssues,
     largestRepo,
+    topContributedRepo,
+    recentActivity,
     avgRepoSize: repos.length ? Math.round(totalSize / repos.length / 1024) : 0,
     topLanguage: languages[0]?.name || 'None',
     estimatedCommits: repos.length ? Math.floor(repos.length * 12.5) : 0,
@@ -71,14 +84,14 @@ function getAchievements(user, repos, totalStars) {
     return Date.now() - date.getTime() < 90 * 24 * 60 * 60 * 1000;
   });
 
-  if (user.followers >= 1000) achievements.push('Popular: 1k+ followers');
-  if (user.public_repos >= 100) achievements.push('Repo Master: 100+ repos');
-  if (user.followers >= 100 && user.public_repos >= 50) achievements.push('Active Maintainer');
-  if (totalStars >= 100) achievements.push('Star Collector: 100+ stars');
-  if (repos.some((repo) => (repo.stargazers_count || 0) >= 50)) achievements.push('Popular Repository');
-  if (recentlyActive) achievements.push('Recently Active');
+  if (user.followers >= 1000) achievements.push('🌟 Popular: 1k+ followers');
+  if (user.public_repos >= 100) achievements.push('📦 Repo Master: 100+ repos');
+  if (user.followers >= 100 && user.public_repos >= 50) achievements.push('🔥 Active Maintainer');
+  if (totalStars >= 100) achievements.push('⭐ Star Collector: 100+ stars');
+  if (repos.some((repo) => (repo.stargazers_count || 0) >= 50)) achievements.push('🏆 Popular Repository');
+  if (recentlyActive) achievements.push('⚡ Recently Active');
 
-  return achievements.length ? achievements : ['Keep contributing. Achievements will appear here.'];
+  return achievements.length ? achievements : ['✨ Keep contributing. Achievements will appear here.'];
 }
 
 async function fetchGitHubProfile(username) {
@@ -141,100 +154,108 @@ async function loadImage(url) {
   });
 }
 
-async function downloadProfileCard(user, repos, stats) {
+async function downloadProfileCard(user, repos, stats, achievements) {
   const canvas = document.createElement('canvas');
   const scale = 2;
-  canvas.width = 1080 * scale;
-  canvas.height = 640 * scale;
+  canvas.width = 1280 * scale;
+  canvas.height = 820 * scale;
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
 
-  const gradient = ctx.createLinearGradient(0, 0, 1080, 640);
-  gradient.addColorStop(0, '#f8fafc');
-  gradient.addColorStop(0.5, '#ffffff');
-  gradient.addColorStop(1, '#e0f2fe');
+  const gradient = ctx.createLinearGradient(0, 0, 1280, 820);
+  gradient.addColorStop(0, '#08111f');
+  gradient.addColorStop(0.5, '#102a43');
+  gradient.addColorStop(1, '#0f766e');
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 1080, 640);
+  ctx.fillRect(0, 0, 1280, 820);
 
-  ctx.fillStyle = 'rgba(37, 99, 235, 0.08)';
+  ctx.fillStyle = 'rgba(52, 211, 153, 0.18)';
   ctx.beginPath();
-  ctx.arc(860, 80, 260, 0, Math.PI * 2);
+  ctx.arc(1060, 84, 280, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+  ctx.fillStyle = 'rgba(96, 165, 250, 0.22)';
   ctx.beginPath();
-  ctx.arc(180, 560, 220, 0, Math.PI * 2);
+  ctx.arc(96, 748, 320, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.shadowColor = 'rgba(15, 23, 42, 0.14)';
-  ctx.shadowBlur = 28;
-  ctx.shadowOffsetY = 14;
-  drawRoundedRect(ctx, 56, 54, 968, 532, 28);
-  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.32)';
+  ctx.shadowBlur = 34;
+  ctx.shadowOffsetY = 18;
+  drawRoundedRect(ctx, 54, 52, 1172, 716, 34);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
   ctx.fill();
   ctx.shadowColor = 'transparent';
 
   try {
-    const avatar = await loadImage(`${user.avatar_url}&s=240`);
-    drawRoundedRect(ctx, 96, 94, 164, 164, 24);
+    const avatar = await loadImage(`${user.avatar_url}&s=320`);
+    drawRoundedRect(ctx, 94, 98, 186, 186, 28);
     ctx.save();
     ctx.clip();
-    ctx.drawImage(avatar, 96, 94, 164, 164);
+    ctx.drawImage(avatar, 94, 98, 186, 186);
     ctx.restore();
   } catch {
     ctx.fillStyle = '#dbeafe';
-    drawRoundedRect(ctx, 96, 94, 164, 164, 24);
+    drawRoundedRect(ctx, 94, 98, 186, 186, 28);
     ctx.fill();
   }
 
   ctx.fillStyle = '#0f172a';
-  ctx.font = '700 48px Arial';
-  fitText(ctx, user.name || user.login, 294, 126, 630, 54, 1);
+  ctx.font = '800 54px Arial';
+  fitText(ctx, user.name || user.login, 318, 134, 760, 58, 1);
   ctx.fillStyle = '#2563eb';
-  ctx.font = '600 28px Arial';
-  ctx.fillText(`@${user.login}`, 294, 174);
+  ctx.font = '700 28px Arial';
+  ctx.fillText(`@${user.login}`, 320, 184);
   ctx.fillStyle = '#475569';
   ctx.font = '400 24px Arial';
-  fitText(ctx, user.bio || 'No bio provided.', 294, 218, 650, 34, 3);
+  fitText(ctx, user.bio || 'No bio provided.', 320, 230, 780, 34, 3);
 
-  const chips = [
+  const metrics = [
     ['Followers', formatNumber(user.followers)],
     ['Repos', formatNumber(user.public_repos)],
     ['Stars', formatNumber(stats.totalStars)],
     ['Forks', formatNumber(stats.totalForks)],
+    ['Top Lang', stats.topLanguage],
+    ['Active Repos', formatNumber(stats.recentActivity)],
   ];
 
-  chips.forEach(([label, value], index) => {
-    const x = 96 + index * 228;
-    drawRoundedRect(ctx, x, 328, 196, 104, 18);
-    ctx.fillStyle = index % 2 ? '#f0fdf4' : '#eff6ff';
+  metrics.forEach(([label, value], index) => {
+    const x = 94 + (index % 3) * 376;
+    const y = 342 + Math.floor(index / 3) * 116;
+    drawRoundedRect(ctx, x, y, 332, 86, 18);
+    ctx.fillStyle = index % 2 ? '#ecfdf5' : '#eff6ff';
     ctx.fill();
-    ctx.fillStyle = '#2563eb';
-    ctx.font = '700 34px Arial';
-    ctx.fillText(value, x + 22, 372);
-    ctx.fillStyle = '#475569';
-    ctx.font = '600 18px Arial';
-    ctx.fillText(label, x + 22, 404);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '800 30px Arial';
+    fitText(ctx, value, x + 24, y + 38, 260, 32, 1);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '700 17px Arial';
+    ctx.fillText(label, x + 24, y + 66);
   });
 
   ctx.fillStyle = '#0f172a';
-  ctx.font = '700 28px Arial';
-  ctx.fillText('Top repositories', 96, 486);
+  ctx.font = '800 30px Arial';
+  ctx.fillText('Top Contributed Repo', 94, 616);
+  ctx.fillStyle = '#2563eb';
+  ctx.font = '800 26px Arial';
+  fitText(ctx, stats.topContributedRepo?.name || 'No public repositories yet', 94, 654, 500, 30, 1);
   ctx.fillStyle = '#475569';
-  ctx.font = '500 22px Arial';
-  const topRepos = repos
-    .slice()
-    .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
-    .slice(0, 3)
-    .map((repo) => `${repo.name} (${repo.stargazers_count || 0} stars)`);
-  fitText(ctx, topRepos.join('  •  ') || 'No public repositories yet.', 96, 526, 820, 30, 2);
+  ctx.font = '500 20px Arial';
+  fitText(ctx, stats.topContributedRepo?.description || 'Profile summary card with GitHub trophies, stats, languages and contribution highlights.', 94, 688, 650, 28, 2);
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '800 26px Arial';
+  ctx.fillText('Highlights', 760, 616);
+  ctx.fillStyle = '#475569';
+  ctx.font = '600 19px Arial';
+  fitText(ctx, achievements.slice(0, 3).join('  •  '), 760, 654, 390, 28, 3);
 
   ctx.fillStyle = '#64748b';
-  ctx.font = '600 18px Arial';
-  ctx.fillText('Generated by GitHub Profile Dashboard', 96, 574);
+  ctx.font = '700 18px Arial';
+  ctx.fillText('Generated by GitHub Profile Dashboard', 94, 738);
 
   const link = document.createElement('a');
   link.href = canvas.toDataURL('image/png');
-  link.download = `${user.login}-github-card.png`;
+  link.download = `${user.login}-premium-github-card.png`;
   link.click();
 }
 
@@ -279,6 +300,7 @@ function App() {
   }, []);
 
   const user = profile?.user;
+  const login = user?.login || DEFAULT_USERNAME;
 
   return (
     <>
@@ -289,17 +311,11 @@ function App() {
             <div className="logo">GH</div>
             <div>
               <h1>GitHub Profile Dashboard</h1>
-              <p>React powered profile explorer</p>
+              <p>Premium profile analytics and share card</p>
             </div>
           </div>
 
-          <form
-            className="nav-search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              search();
-            }}
-          >
+          <form className="nav-search" onSubmit={(event) => { event.preventDefault(); search(); }}>
             <input
               className="nav-search-input"
               value={username}
@@ -318,11 +334,13 @@ function App() {
         <div className="container">
           {error && <div className="alert">{error}</div>}
 
-          <section className="content-row two-cols">
-            <aside className="profile-panel">
+          <section className="hero-grid">
+            <aside className="profile-panel premium-card">
+              <div className="profile-glow" />
               <img className="avatar" src={user?.avatar_url || 'https://github.com/octocat.png'} alt={user ? `${user.login} avatar` : 'GitHub avatar'} />
+              <p className="eyebrow">Premium GitHub Profile</p>
               <h2>{loading ? 'Loading profile...' : user?.name || user?.login || 'The Octocat'}</h2>
-              <p className="handle">@{user?.login || DEFAULT_USERNAME}</p>
+              <p className="handle">@{login}</p>
               <p className="bio">{user?.bio || 'Search a GitHub username to see a polished profile dashboard.'}</p>
 
               <div className="stats">
@@ -338,73 +356,82 @@ function App() {
                 <button
                   className="primary-btn"
                   disabled={!profile}
-                  onClick={() => downloadProfileCard(profile.user, profile.repos, stats)}
+                  onClick={() => downloadProfileCard(profile.user, profile.repos, stats, achievements)}
                 >
                   Download Card
                 </button>
               </div>
-
-              <Panel title="GitHub Trophies" compact>
-                {user ? (
-                  <img
-                    className="wide-image"
-                    src={`https://github-profile-trophy.vercel.app/?username=${encodeURIComponent(user.login)}&theme=flat&no-frame=true&margin-w=8`}
-                    alt={`${user.login} trophies`}
-                  />
-                ) : (
-                  <Empty text="Trophies will load after search." />
-                )}
-              </Panel>
-
-              <Panel title="Contribution Graph" compact>
-                {user && (
-                  <>
-                    {!graphReady && <Empty text="Loading contribution graph..." />}
-                    <img
-                      className="wide-image"
-                      style={{ display: graphReady ? 'block' : 'none' }}
-                      src={`https://github-readme-activity-graph.vercel.app/graph?username=${encodeURIComponent(user.login)}&theme=github-light&hide_border=true`}
-                      alt={`${user.login} contribution graph`}
-                      onLoad={() => setGraphReady(true)}
-                      onError={() => setGraphReady(false)}
-                    />
-                  </>
-                )}
-              </Panel>
             </aside>
 
-            <div className="right-column">
-              <Panel title="Achievements">
-                <div className="chips">
-                  {(achievements.length ? achievements : ['Loading achievements...']).map((achievement) => (
-                    <span className="chip" key={achievement}>{achievement}</span>
-                  ))}
+            <div className="hero-stack">
+              <Panel title="📊 GitHub Stats">
+                <div className="stats-visual-grid">
+                  {user ? (
+                    <>
+                      <img className="readme-card" src={`https://github-readme-stats.vercel.app/api?username=${encodeURIComponent(login)}&show_icons=true&theme=transparent&hide_border=true&rank_icon=github`} alt={`${login} GitHub stats`} />
+                      <img className="readme-card" src={`https://streak-stats.demolab.com?user=${encodeURIComponent(login)}&theme=transparent&hide_border=true`} alt={`${login} GitHub streak stats`} />
+                    </>
+                  ) : (
+                    <Empty text="GitHub stats will appear after search." />
+                  )}
                 </div>
               </Panel>
 
-              <Panel title="Top Repositories">
-                <div className="repos">
-                  {topRepos.length ? topRepos.map((repo) => <RepoCard repo={repo} key={repo.id} />) : <Empty text={loading ? 'Loading repositories...' : 'No public repositories found.'} />}
-                </div>
-              </Panel>
-
-              <Panel title="Repository Snapshot">
-                <div className="stats-row">
-                  <span className="small-chip">{formatNumber(stats.totalStars)} stars</span>
-                  <span className="small-chip">{formatNumber(stats.totalForks)} forks</span>
-                  <span className="small-chip">Largest: {stats.largestRepo ? `${stats.largestRepo.name} (${Math.round(stats.largestRepo.size / 1024)} KB)` : 'None'}</span>
-                </div>
+              <Panel title="🔝 Top Contributed Repo">
+                {stats.topContributedRepo ? <FeaturedRepo repo={stats.topContributedRepo} /> : <Empty text={loading ? 'Finding top contributed repository...' : 'No repository data available.'} />}
               </Panel>
             </div>
           </section>
 
+          <section className="dashboard-grid">
+            <Panel title="🏆 GitHub Trophies">
+              {user ? (
+                <img
+                  className="wide-image trophy-strip"
+                  src={`https://github-profile-trophy.vercel.app/?username=${encodeURIComponent(login)}&theme=flat&no-frame=true&margin-w=10&row=1`}
+                  alt={`${login} trophies`}
+                />
+              ) : (
+                <Empty text="Trophies will load after search." />
+              )}
+            </Panel>
+
+            <Panel title="📈 Contribution Graph">
+              {user ? (
+                <>
+                  {!graphReady && <Empty text="Loading contribution graph..." />}
+                  <img
+                    className="wide-image contribution-graph"
+                    style={{ display: graphReady ? 'block' : 'none' }}
+                    src={`https://github-readme-activity-graph.vercel.app/graph?username=${encodeURIComponent(login)}&theme=github-light&hide_border=true&area=true`}
+                    alt={`${login} contribution graph`}
+                    onLoad={() => setGraphReady(true)}
+                    onError={() => setGraphReady(false)}
+                  />
+                </>
+              ) : (
+                <Empty text="Contribution graph will appear after search." />
+              )}
+            </Panel>
+          </section>
+
           <section className="content-row">
-            <Panel title="Activity Statistics">
-              <div className="activity-stats">
-                <Stat label="Total Commits" value={formatNumber(stats.estimatedCommits)} />
-                <Stat label="This Year" value={formatNumber(stats.estimatedYearCommits)} />
-                <Stat label="Avg Repo Size" value={`${stats.avgRepoSize} KB`} />
-                <Stat label="Top Language" value={stats.topLanguage} />
+            <Panel title="Achievements">
+              <div className="chips">
+                {(achievements.length ? achievements : ['Loading achievements...']).map((achievement) => (
+                  <span className="chip" key={achievement}>{achievement}</span>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel title="Repository Snapshot">
+              <div className="metric-grid">
+                <MiniMetric label="Total Stars" value={formatNumber(stats.totalStars)} />
+                <MiniMetric label="Total Forks" value={formatNumber(stats.totalForks)} />
+                <MiniMetric label="Watchers" value={formatNumber(stats.totalWatchers)} />
+                <MiniMetric label="Open Issues" value={formatNumber(stats.totalOpenIssues)} />
+                <MiniMetric label="Active Repos" value={formatNumber(stats.recentActivity)} />
+                <MiniMetric label="Avg Size" value={`${stats.avgRepoSize} KB`} />
               </div>
             </Panel>
 
@@ -419,6 +446,27 @@ function App() {
                 )) : <Empty text="No language data available." />}
               </div>
             </Panel>
+          </section>
+
+          <section className="content-row wide-section">
+            <Panel title="Top Repositories">
+              <div className="repos">
+                {topRepos.length ? topRepos.map((repo) => <RepoCard repo={repo} key={repo.id} />) : <Empty text={loading ? 'Loading repositories...' : 'No public repositories found.'} />}
+              </div>
+            </Panel>
+          </section>
+
+          <section className="content-row">
+            <Panel title="📊 More GitHub Stats">
+              {user ? (
+                <div className="stats-visual-grid">
+                  <img className="readme-card" src={`https://github-readme-stats.vercel.app/api/top-langs/?username=${encodeURIComponent(login)}&layout=compact&theme=transparent&hide_border=true`} alt={`${login} top languages`} />
+                  <img className="readme-card" src={`https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=${encodeURIComponent(login)}&theme=github`} alt={`${login} profile details`} />
+                </div>
+              ) : (
+                <Empty text="More stats will appear after search." />
+              )}
+            </Panel>
 
             <Panel title="Profile Links">
               <div className="social-links">
@@ -431,7 +479,7 @@ function App() {
             </Panel>
           </section>
 
-          <footer>Made with React and the GitHub API.</footer>
+          <footer>Made with React, GitHub API, and a premium downloadable profile card.</footer>
         </div>
       </main>
     </>
@@ -447,10 +495,21 @@ function Stat({ label, value }) {
   );
 }
 
-function Panel({ title, children, compact = false }) {
+function MiniMetric({ label, value }) {
   return (
-    <section className={compact ? 'panel compact' : 'panel'}>
-      <h3>{title}</h3>
+    <div className="mini-metric">
+      <span>{label}</span>
+      <b>{value}</b>
+    </div>
+  );
+}
+
+function Panel({ title, children }) {
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <h3>{title}</h3>
+      </div>
       {children}
     </section>
   );
@@ -458,6 +517,22 @@ function Panel({ title, children, compact = false }) {
 
 function Empty({ text }) {
   return <p className="empty">{text}</p>;
+}
+
+function FeaturedRepo({ repo }) {
+  return (
+    <article className="featured-repo">
+      <div>
+        <a href={repo.html_url} target="_blank" rel="noreferrer">{repo.name}</a>
+        <p>{repo.description || 'No description provided.'}</p>
+      </div>
+      <div className="featured-stats">
+        <span>{repo.stargazers_count || 0} stars</span>
+        <span>{repo.forks_count || 0} forks</span>
+        <span>{repo.language || 'Code'}</span>
+      </div>
+    </article>
+  );
 }
 
 function RepoCard({ repo }) {
