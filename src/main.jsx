@@ -81,6 +81,7 @@ function TopNav() {
         <NavLink to={`/analytics/${DEFAULT_USERNAME}`}>Analytics</NavLink>
         <NavLink to="/compare">Compare</NavLink>
         <NavLink to="/leaderboards">Leaderboards</NavLink>
+        <NavLink to="/settings">Settings</NavLink>
       </nav>
       <button className="icon-btn" onClick={() => setTheme(theme === 'black' ? 'light' : 'black')} aria-label="Toggle theme">
         {theme === 'black' ? <FiSun /> : <FiMoon />}
