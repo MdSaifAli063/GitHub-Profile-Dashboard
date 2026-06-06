@@ -39,6 +39,7 @@ GitLens Pro is a premium React + JavaScript GitHub analytics platform. It turns 
 
 ## Routes
 
+
 ```text
 /
 /search
