@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider, useQuery, useQueries } from '@tanstack/react-query';
-import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Radar, RadarChart, PolarAngleAxis, PolarGrid, PolarRadiusAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -16,9 +16,14 @@ const APP_TAGLINE = 'GitHub Profile Analytics';
 const DEFAULT_USERNAME = 'octocat';
 const queryClient = new QueryClient();
 const ThemeContext = createContext(null);
+const ProfileContext = createContext(null);
 
 function useTheme() {
   return useContext(ThemeContext);
+}
+
+function useActiveProfile() {
+  return useContext(ProfileContext);
 }
 
 function useProfile(username) {
@@ -33,40 +38,59 @@ function useProfile(username) {
 
 function AppShell() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'black');
+  const [activeUsername, setActiveUsername] = useState(() => localStorage.getItem('active-username') || DEFAULT_USERNAME);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  const selectProfile = useCallback((username) => {
+    const clean = (username || DEFAULT_USERNAME).trim().toLowerCase() || DEFAULT_USERNAME;
+    setActiveUsername(clean);
+    localStorage.setItem('active-username', clean);
+  }, []);
+
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
-      <BrowserRouter>
-        <div className="app-bg" />
-        <TopNav />
-        <main className="app-shell">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/dashboard/:username" element={<DashboardPage />} />
-            <Route path="/repositories/:username?" element={<RepositoriesPage />} />
-            <Route path="/analytics/:username?" element={<AnalyticsPage />} />
-            <Route path="/compare" element={<ComparePage />} />
-            <Route path="/leaderboards" element={<LeaderboardsPage />} />
-            <Route path="/achievements/:username?" element={<AchievementsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-        <MobileNav />
-        <Toaster position="top-right" toastOptions={{ className: 'toast' }} />
-      </BrowserRouter>
+      <ProfileContext.Provider value={{ activeUsername, selectProfile }}>
+        <BrowserRouter>
+          <div className="app-bg" />
+          <TopNav />
+          <ActiveProfileBar />
+          <main className="app-shell">
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/dashboard/:username" element={<DashboardPage />} />
+              <Route path="/repositories/:username?" element={<RepositoriesPage />} />
+              <Route path="/analytics/:username?" element={<AnalyticsPage />} />
+              <Route path="/compare" element={<ComparePage />} />
+              <Route path="/leaderboards" element={<LeaderboardsPage />} />
+              <Route path="/achievements/:username?" element={<AchievementsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+          <SiteFooter />
+          <MobileNav />
+          <Toaster position="top-right" toastOptions={{ className: 'toast' }} />
+        </BrowserRouter>
+      </ProfileContext.Provider>
     </ThemeContext.Provider>
   );
 }
 
+function saveSearchHistory(username) {
+  const clean = username.trim().toLowerCase();
+  if (!clean) return;
+  const history = JSON.parse(localStorage.getItem('search-history') || '[]');
+  localStorage.setItem('search-history', JSON.stringify([clean, ...history.filter((item) => item !== clean)].slice(0, 6)));
+}
+
 function TopNav() {
   const { theme, setTheme } = useTheme();
+  const { activeUsername } = useActiveProfile();
   return (
     <header className="top-nav">
       <Link to="/" className="brand-mark">
@@ -76,11 +100,11 @@ function TopNav() {
           <small>{APP_TAGLINE}</small>
         </div>
       </Link>
+      <NavProfileSearch />
       <nav className="desktop-nav">
-        <NavLink to="/search">Search</NavLink>
-        <NavLink to={`/dashboard/${DEFAULT_USERNAME}`}>Dashboard</NavLink>
-        <NavLink to={`/repositories/${DEFAULT_USERNAME}`}>Repositories</NavLink>
-        <NavLink to={`/analytics/${DEFAULT_USERNAME}`}>Analytics</NavLink>
+        <NavLink to={`/dashboard/${activeUsername}`}>Dashboard</NavLink>
+        <NavLink to={`/repositories/${activeUsername}`}>Repositories</NavLink>
+        <NavLink to={`/analytics/${activeUsername}`}>Analytics</NavLink>
         <NavLink to="/compare">Compare</NavLink>
         <NavLink to="/leaderboards">Leaderboards</NavLink>
         <NavLink to="/settings">Settings</NavLink>
@@ -92,12 +116,169 @@ function TopNav() {
   );
 }
 
+function NavProfileSearch() {
+  const navigate = useNavigate();
+  const { activeUsername, selectProfile } = useActiveProfile();
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const rootRef = useRef(null);
+
+  const history = useMemo(() => JSON.parse(localStorage.getItem('search-history') || '[]'), [open, query]);
+  const suggestions = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const pool = [...new Set([...history, ...popularProfiles])];
+    if (!needle) return pool.slice(0, 6);
+    return pool.filter((name) => name.includes(needle)).slice(0, 6);
+  }, [query, history]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (rootRef.current && !rootRef.current.contains(event.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query, open]);
+
+  function goToProfile(username) {
+    const clean = (username || query).trim().toLowerCase() || DEFAULT_USERNAME;
+    selectProfile(clean);
+    saveSearchHistory(clean);
+    setQuery('');
+    setOpen(false);
+    navigate(`/dashboard/${clean}`);
+    toast.success(`Switched to @${clean}`);
+  }
+
+  function submit(event) {
+    event.preventDefault();
+    if (suggestions[activeIndex]) goToProfile(suggestions[activeIndex]);
+    else goToProfile(query);
+  }
+
+  function onKeyDown(event) {
+    if (!open && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+      setOpen(true);
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveIndex((index) => (index + 1) % Math.max(suggestions.length, 1));
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex((index) => (index - 1 + Math.max(suggestions.length, 1)) % Math.max(suggestions.length, 1));
+    }
+    if (event.key === 'Escape') setOpen(false);
+  }
+
+  return (
+    <div className="nav-search" ref={rootRef}>
+      <form className="nav-search-form" onSubmit={submit}>
+        <FiSearch />
+        <input
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
+          placeholder={`Search user… (@${activeUsername})`}
+          aria-label="Search GitHub username"
+          aria-expanded={open}
+          aria-controls="nav-search-suggestions"
+          autoComplete="off"
+        />
+        {query && (
+          <button type="button" className="nav-search-clear" onClick={() => { setQuery(''); setOpen(true); }} aria-label="Clear search">
+            ×
+          </button>
+        )}
+        <button type="submit" className="nav-search-go">Go</button>
+      </form>
+      {open && (
+        <div className="nav-search-dropdown" id="nav-search-suggestions" role="listbox">
+          {suggestions.length ? suggestions.map((name, index) => (
+            <button
+              key={name}
+              type="button"
+              role="option"
+              aria-selected={index === activeIndex}
+              className={index === activeIndex ? 'nav-search-item active' : 'nav-search-item'}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => goToProfile(name)}
+            >
+              <FiGithub />
+              <span>{name}</span>
+              {name === activeUsername && <em>Current</em>}
+              {history.includes(name) && name !== activeUsername && <em>Recent</em>}
+            </button>
+          )) : (
+            <div className="nav-search-empty">Press Enter to analyze “{query.trim() || activeUsername}”</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActiveProfileBar() {
+  const location = useLocation();
+  const { activeUsername } = useActiveProfile();
+  const hidden = ['/', '/settings', '/compare'].includes(location.pathname);
+
+  if (hidden) return null;
+
+  return (
+    <div className="active-profile-bar">
+      <div className="active-profile-inner">
+        <div className="active-profile-meta">
+          <span className="active-dot" />
+          <strong>Viewing profile</strong>
+          <Link to={`/dashboard/${activeUsername}`}>@{activeUsername}</Link>
+        </div>
+        <div className="active-profile-links">
+          <NavLink to={`/dashboard/${activeUsername}`}>Dashboard</NavLink>
+          <NavLink to={`/repositories/${activeUsername}`}>Repositories</NavLink>
+          <NavLink to={`/analytics/${activeUsername}`}>Analytics</NavLink>
+          <NavLink to={`/achievements/${activeUsername}`}>Achievements</NavLink>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <div>
+          <b>{APP_NAME}</b>
+          <p>{APP_TAGLINE} — explore, compare, and export GitHub developer insights.</p>
+        </div>
+        <div className="footer-links">
+          <Link to="/search">Search</Link>
+          <Link to="/leaderboards">Leaderboards</Link>
+          <Link to="/compare">Compare</Link>
+          <Link to="/settings">Settings</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 function MobileNav() {
+  const { activeUsername } = useActiveProfile();
   return (
     <nav className="mobile-nav">
       <NavLink to="/"><FiHome /><span>Home</span></NavLink>
       <NavLink to="/search"><FiSearch /><span>Search</span></NavLink>
-      <NavLink to={`/dashboard/${DEFAULT_USERNAME}`}><FiBarChart2 /><span>Dash</span></NavLink>
+      <NavLink to={`/dashboard/${activeUsername}`}><FiBarChart2 /><span>Dash</span></NavLink>
       <NavLink to="/compare"><FiUsers /><span>Compare</span></NavLink>
       <NavLink to="/settings"><FiSettings /><span>Settings</span></NavLink>
     </nav>
@@ -106,6 +287,7 @@ function MobileNav() {
 
 function Landing() {
   const navigate = useNavigate();
+  const { selectProfile } = useActiveProfile();
   const [username, setUsername] = useState(DEFAULT_USERNAME);
   const [typed, setTyped] = useState('');
   const phrase = 'Analyze profiles. Track contributions. Export shareable GitHub cards.';
@@ -117,7 +299,10 @@ function Landing() {
 
   function submit(event) {
     event.preventDefault();
-    navigate(`/dashboard/${username.trim() || DEFAULT_USERNAME}`);
+    const clean = username.trim().toLowerCase() || DEFAULT_USERNAME;
+    selectProfile(clean);
+    saveSearchHistory(clean);
+    navigate(`/dashboard/${clean}`);
   }
 
   return (
@@ -127,7 +312,7 @@ function Landing() {
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="hero-copy">
           <div className="hero-logo"><FiGithub /></div>
           <p className="eyebrow">{APP_NAME} — {APP_TAGLINE}</p>
-          <h1>Your GitHub profile, visualized and ranked.</h1>
+          <h1>Your GitHub profile, visualized beautifully.</h1>
           <p className="typewriter">{typed}</p>
           <form className="hero-search" onSubmit={submit}>
             <FiSearch />
@@ -135,7 +320,9 @@ function Landing() {
             <button>Analyze</button>
           </form>
           <div className="suggestions">
-            {popularProfiles.slice(0, 5).map((name) => <button key={name} onClick={() => navigate(`/dashboard/${name}`)}>{name}</button>)}
+            {popularProfiles.slice(0, 5).map((name) => (
+              <button key={name} onClick={() => { selectProfile(name); navigate(`/dashboard/${name}`); }}>{name}</button>
+            ))}
           </div>
         </motion.div>
       </section>
@@ -146,7 +333,7 @@ function Landing() {
           ['Contribution Tracking', 'Contribution graph, streak stats, activity trends and active repo analysis.'],
           ['Repository Intelligence', 'Search, filter, sort and inspect public projects with stat cards.'],
           ['AI Insights', 'Deterministic insight engine for stack, influence, quality and growth trajectory.'],
-          ['Developer Ranking', 'Leaderboard-ready scoring for followers, stars, repos and open-source impact.'],
+          ['Developer Leaderboards', 'Compare top open-source developers by followers, stars and repository impact.'],
           ['Open Source Impact', 'Stars, forks, watchers, issues, language diversity and achievements.'],
         ].map(([title, text]) => <GlassCard key={title} title={title} text={text} />)}
       </section>
@@ -163,14 +350,16 @@ function Landing() {
 
 function SearchPage() {
   const navigate = useNavigate();
+  const { selectProfile } = useActiveProfile();
   const [username, setUsername] = useState('');
   const history = JSON.parse(localStorage.getItem('search-history') || '[]');
   const suggestions = useMemo(() => popularProfiles.filter((name) => name.includes(username.toLowerCase())).slice(0, 6), [username]);
 
   function submit(event) {
     event.preventDefault();
-    const clean = username.trim() || DEFAULT_USERNAME;
-    localStorage.setItem('search-history', JSON.stringify([clean, ...history.filter((item) => item !== clean)].slice(0, 6)));
+    const clean = username.trim().toLowerCase() || DEFAULT_USERNAME;
+    selectProfile(clean);
+    saveSearchHistory(clean);
     navigate(`/dashboard/${clean}`);
   }
 
@@ -193,7 +382,13 @@ function SearchPage() {
 
 function DashboardPage() {
   const { username = DEFAULT_USERNAME } = useParams();
+  const { selectProfile } = useActiveProfile();
   const { data, isLoading, error } = useProfile(username);
+
+  useEffect(() => {
+    selectProfile(username);
+  }, [username, selectProfile]);
+
   if (isLoading) return <SkeletonPage />;
   if (error) return <ErrorState error={error} />;
 
@@ -250,11 +445,17 @@ function DashboardPage() {
 
 function RepositoriesPage() {
   const params = useParams();
-  const username = params.username || DEFAULT_USERNAME;
+  const { activeUsername, selectProfile } = useActiveProfile();
+  const username = (params.username || activeUsername || DEFAULT_USERNAME).toLowerCase();
   const { data, isLoading, error } = useProfile(username);
   const [search, setSearch] = useState('');
   const [language, setLanguage] = useState('all');
   const [sort, setSort] = useState('stars');
+
+  useEffect(() => {
+    selectProfile(username);
+  }, [username, selectProfile]);
+
   if (isLoading) return <SkeletonPage />;
   if (error) return <ErrorState error={error} />;
 
@@ -267,32 +468,94 @@ function RepositoriesPage() {
 
   return (
     <div className="page">
-      <SectionTitle title="Repository Intelligence" text="Search, filter and sort repositories by stars, forks, activity, size and language." />
+      <SectionTitle title="Repository Intelligence" text={`Browsing ${data.repos.length} public repositories for @${data.user.login}. Search, filter and sort by stars, forks, activity, size and language.`} />
       <div className="toolbar">
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search repositories" />
         <select value={language} onChange={(event) => setLanguage(event.target.value)}>{languages.map((item) => <option key={item}>{item}</option>)}</select>
         <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="stars">Most starred</option><option value="forks">Most forked</option><option value="updated">Recently updated</option><option value="size">Largest</option></select>
       </div>
-      <div className="repo-grid">{repos.map((repo) => <RepoCard repo={repo} key={repo.id} />)}</div>
+      <div className="repo-grid">{repos.length ? repos.map((repo) => <RepoCard repo={repo} key={repo.id} />) : <Panel title="No repositories found"><Empty text="Try changing your search or language filter." /></Panel>}</div>
     </div>
   );
 }
 
 function AnalyticsPage() {
-  const { username = DEFAULT_USERNAME } = useParams();
+  const params = useParams();
+  const { activeUsername, selectProfile } = useActiveProfile();
+  const username = (params.username || activeUsername || DEFAULT_USERNAME).toLowerCase();
   const { data, isLoading, error } = useProfile(username);
+
+  useEffect(() => {
+    selectProfile(username);
+  }, [username, selectProfile]);
+
   if (isLoading) return <SkeletonPage />;
   if (error) return <ErrorState error={error} />;
-  const analytics = getAnalytics(data.user, data.repos);
+
+  const { user, repos } = data;
+  const analytics = getAnalytics(user, repos);
+  const avgScore = Math.round(analytics.scores.reduce((sum, score) => sum + score.value, 0) / analytics.scores.length);
+  const topRepos = repos
+    .slice()
+    .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+    .slice(0, 6)
+    .map((repo) => ({
+      name: repo.name.length > 14 ? `${repo.name.slice(0, 14)}…` : repo.name,
+      stars: repo.stargazers_count || 0,
+      forks: repo.forks_count || 0,
+    }));
 
   return (
-    <div className="page">
-      <SectionTitle title="Analytics Dashboard" text="Interactive charts for scores, languages, repository activity and contribution trends." />
-      <section className="dashboard-grid two">
-        <Panel title="Score Radar"><ScoreRadar scores={analytics.scores} /></Panel>
-        <Panel title="Activity Trend"><ActivityChart analytics={analytics} /></Panel>
-        <Panel title="Language Donut"><LanguagePie analytics={analytics} /></Panel>
-        <Panel title="Repository Metrics"><MetricTable analytics={analytics} /></Panel>
+    <div className="page analytics-page">
+      <AnalyticsHero user={user} analytics={analytics} avgScore={avgScore} />
+
+      <section className="analytics-kpi-grid">
+        <Metric icon={<FiStar />} label="Total Stars" value={formatNumber(analytics.totalStars)} trend="impact" />
+        <Metric icon={<FiGitBranch />} label="Total Forks" value={formatNumber(analytics.totalForks)} trend="reach" />
+        <Metric icon={<FiGithub />} label="Public Repos" value={formatNumber(user.public_repos)} trend="projects" />
+        <Metric icon={<FiBarChart2 />} label="Active Repos" value={formatNumber(analytics.activeRepos)} trend="90 days" />
+        <Metric icon={<FiUsers />} label="Followers" value={formatNumber(user.followers)} trend="community" />
+        <Metric icon={<FiAward />} label="Avg Score" value={`${avgScore}/100`} trend="overall" />
+      </section>
+
+      <section className="analytics-grid">
+        <Panel title="GitHub Score Radar" className="analytics-panel analytics-panel-wide">
+          <p className="panel-caption">Six-dimension profile analysis across strength, open source, contribution, community, quality and collaboration.</p>
+          <ScoreRadar scores={analytics.scores} height={340} />
+          <ScoreBars scores={analytics.scores} />
+        </Panel>
+
+        <Panel title="Repository Activity" className="analytics-panel">
+          <p className="panel-caption">Repositories updated by month based on public push activity.</p>
+          <ActivityChart analytics={analytics} gradientId="analytics-activity" height={300} />
+        </Panel>
+
+        <Panel title="Language Distribution" className="analytics-panel">
+          <p className="panel-caption">Share of programming languages across public repositories.</p>
+          <LanguageBreakdown analytics={analytics} />
+        </Panel>
+
+        <Panel title="Top Repositories" className="analytics-panel analytics-panel-wide">
+          <p className="panel-caption">Most starred public repositories for @{user.login}.</p>
+          <TopReposChart data={topRepos} />
+        </Panel>
+
+        <Panel title="Engagement Metrics" className="analytics-panel">
+          <p className="panel-caption">Estimated activity signals derived from public GitHub data.</p>
+          <AnalyticsMetricGrid analytics={analytics} />
+        </Panel>
+
+        <Panel title="Quick Insights" className="analytics-panel">
+          <p className="panel-caption">Key takeaways from profile and repository analytics.</p>
+          <div className="analytics-insights">
+            {getInsights(user, repos, analytics).map((insight) => (
+              <div key={insight} className="analytics-insight-item">
+                <span className="insight-dot" />
+                <p>{insight}</p>
+              </div>
+            ))}
+          </div>
+        </Panel>
       </section>
     </div>
   );
@@ -334,8 +597,15 @@ function LeaderboardsPage() {
 }
 
 function AchievementsPage() {
-  const { username = DEFAULT_USERNAME } = useParams();
+  const params = useParams();
+  const { activeUsername, selectProfile } = useActiveProfile();
+  const username = (params.username || activeUsername || DEFAULT_USERNAME).toLowerCase();
   const { data, isLoading, error } = useProfile(username);
+
+  useEffect(() => {
+    selectProfile(username);
+  }, [username, selectProfile]);
+
   if (isLoading) return <SkeletonPage />;
   if (error) return <ErrorState error={error} />;
   const analytics = getAnalytics(data.user, data.repos);
@@ -400,6 +670,137 @@ function CircularScore({ score }) {
   );
 }
 
+function AnalyticsHero({ user, analytics, avgScore }) {
+  return (
+    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="analytics-hero">
+      <img src={user.avatar_url} alt={user.login} />
+      <div>
+        <p className="eyebrow">Analytics Dashboard</p>
+        <h1>{user.name || user.login}</h1>
+        <span>@{user.login} · {analytics.languages.length} languages · {formatNumber(analytics.totalStars)} stars</span>
+      </div>
+      <div className="analytics-hero-score">
+        <b>{avgScore}</b>
+        <small>Overall Score</small>
+      </div>
+    </motion.section>
+  );
+}
+
+function ScoreBars({ scores }) {
+  return (
+    <div className="score-bars">
+      {scores.map((score) => (
+        <div key={score.name} className="score-bar-row">
+          <div className="score-bar-head">
+            <span>{score.name}</span>
+            <strong>{score.value}/100</strong>
+          </div>
+          <div className="score-bar-track">
+            <motion.span
+              initial={{ width: 0 }}
+              animate={{ width: `${score.value}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              style={{ '--bar-color': score.value >= 70 ? 'var(--accent)' : score.value >= 40 ? 'var(--primary)' : 'var(--gold)' }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LanguageBreakdown({ analytics }) {
+  const languages = analytics.languages.slice(0, 8);
+  if (!languages.length) return <Empty text="No language data available for this profile." />;
+
+  return (
+    <div className="language-breakdown">
+      <LanguagePie analytics={analytics} height={240} innerRadius={52} outerRadius={88} />
+      <div className="language-legend">
+        {languages.map((lang) => (
+          <div key={lang.name} className="language-legend-row">
+            <span className="language-swatch" style={{ background: lang.color }} />
+            <span className="language-name">{lang.name}</span>
+            <strong>{lang.percent}%</strong>
+            <em>{lang.count} repos</em>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TopReposChart({ data }) {
+  if (!data.length) return <Empty text="No public repositories to chart yet." />;
+
+  return (
+    <div className="chart-box chart-box-tall">
+      <ResponsiveContainer width="100%" height={320}>
+        <BarChart data={data} barGap={8} barCategoryGap="18%">
+          <defs>
+            <linearGradient id="starsGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity={0.95} />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity={0.55} />
+            </linearGradient>
+            <linearGradient id="forksGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#14b8a6" stopOpacity={0.95} />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity={0.55} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" opacity={0.15} vertical={false} />
+          <XAxis dataKey="name" tick={{ fill: 'var(--muted)', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: 'var(--muted)', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+          <Tooltip content={<ChartTooltip />} />
+          <Bar dataKey="stars" name="Stars" fill="url(#starsGradient)" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="forks" name="Forks" fill="url(#forksGradient)" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function AnalyticsMetricGrid({ analytics }) {
+  const items = [
+    ['Gists', analytics.totalGists, FiGithub],
+    ['Watchers', analytics.watchers, FiUsers],
+    ['Open Issues', analytics.issues, FiGitBranch],
+    ['Commits', analytics.commits, FiBarChart2],
+    ['Pull Requests', analytics.pullRequests, FiGitBranch],
+    ['Releases', analytics.releases, FiStar],
+    ['Avg Repo Size', `${analytics.avgRepoSize} KB`, FiGithub],
+    ['Top Language', analytics.topLanguage, FiAward],
+  ];
+
+  return (
+    <div className="analytics-metric-grid">
+      {items.map(([label, value, Icon]) => (
+        <div key={label} className="analytics-metric-item">
+          <span><Icon /></span>
+          <div>
+            <small>{label}</small>
+            <b>{typeof value === 'number' ? formatNumber(value) : value}</b>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChartTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const title = label || payload[0]?.payload?.name || payload[0]?.name;
+  return (
+    <div className="chart-tooltip">
+      {title && <strong>{title}</strong>}
+      {payload.map((entry) => (
+        <span key={`${entry.name}-${entry.dataKey}`} style={{ color: entry.color || 'var(--primary)' }}>
+          {entry.name}: {formatNumber(entry.value)}
+        </span>
+      ))}
+    </div>
+  );
+}
 function LanguageCharts({ analytics }) {
   return (
     <div className="chart-stack">
@@ -409,49 +810,61 @@ function LanguageCharts({ analytics }) {
   );
 }
 
-function LanguagePie({ analytics }) {
+function LanguagePie({ analytics, height = 260, innerRadius = 60, outerRadius = 95 }) {
+  const languages = analytics.languages.slice(0, 8);
+  if (!languages.length) return null;
+
   return (
-    <div className="chart-box">
-      <ResponsiveContainer width="100%" height={260}>
+    <div className="chart-box" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={analytics.languages.slice(0, 8)} dataKey="count" nameKey="name" innerRadius={60} outerRadius={95}>
-            {analytics.languages.slice(0, 8).map((item) => <Cell key={item.name} fill={item.color} />)}
+          <Pie data={languages} dataKey="count" nameKey="name" innerRadius={innerRadius} outerRadius={outerRadius} paddingAngle={3}>
+            {languages.map((item) => <Cell key={item.name} fill={item.color} stroke="transparent" />)}
           </Pie>
-          <Tooltip />
+          <Tooltip content={<ChartTooltip />} />
         </PieChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-function ActivityChart({ analytics }) {
+function ActivityChart({ analytics, gradientId = 'activity', height = 260 }) {
+  const data = analytics.updatedMonths.length ? analytics.updatedMonths : [{ month: 'N/A', repos: 0 }];
+
   return (
-    <div className="chart-box">
-      <ResponsiveContainer width="100%" height={260}>
-        <AreaChart data={analytics.updatedMonths}>
-          <defs><linearGradient id="activity" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#60a5fa" stopOpacity={0.8} /><stop offset="100%" stopColor="#60a5fa" stopOpacity={0.05} /></linearGradient></defs>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="month" />
-          <YAxis />
-          <Tooltip />
-          <Area type="monotone" dataKey="repos" stroke="#2563eb" fill="url(#activity)" />
+    <div className="chart-box" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity={0.75} />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity={0.04} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" opacity={0.15} vertical={false} />
+          <XAxis dataKey="month" tick={{ fill: 'var(--muted)', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: 'var(--muted)', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} allowDecimals={false} />
+          <Tooltip content={<ChartTooltip />} />
+          <Area type="monotone" dataKey="repos" name="Repos updated" stroke="#a855f7" strokeWidth={3} fill={`url(#${gradientId})`} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-function ScoreRadar({ scores }) {
+function ScoreRadar({ scores, height = 360 }) {
   return (
-    <ResponsiveContainer width="100%" height={360}>
-      <RadarChart data={scores}>
-        <PolarGrid />
-        <PolarAngleAxis dataKey="name" />
-        <PolarRadiusAxis angle={30} domain={[0, 100]} />
-        <Radar dataKey="value" stroke="#14b8a6" fill="#14b8a6" fillOpacity={0.35} />
-        <Tooltip />
-      </RadarChart>
-    </ResponsiveContainer>
+    <div className="chart-box" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart data={scores} outerRadius="72%">
+          <PolarGrid stroke="var(--line)" />
+          <PolarAngleAxis dataKey="name" tick={{ fill: 'var(--muted)', fontSize: 11, fontWeight: 700 }} />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--muted)', fontSize: 10 }} axisLine={false} />
+          <Radar dataKey="value" name="Score" stroke="#14b8a6" fill="#a855f7" fillOpacity={0.28} strokeWidth={2} />
+          <Tooltip content={<ChartTooltip />} />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -571,8 +984,8 @@ function Metric({ icon, label, value, trend }) {
   );
 }
 
-function Panel({ title, children }) {
-  return <section className="panel"><h2>{title}</h2>{children}</section>;
+function Panel({ title, children, className = '' }) {
+  return <section className={className ? `panel ${className}` : 'panel'}><h2>{title}</h2>{children}</section>;
 }
 
 function GlassCard({ title, text }) {
