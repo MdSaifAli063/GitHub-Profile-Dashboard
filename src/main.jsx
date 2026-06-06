@@ -307,7 +307,7 @@ function Landing() {
 
   return (
     <div className="page">
-      <section className="landing-hero">
+      <section className="landing-hero desktop-only">
         <div className="particles"><span /><span /><span /><span /></div>
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="hero-copy">
           <div className="hero-logo"><FiGithub /></div>
@@ -325,6 +325,17 @@ function Landing() {
             ))}
           </div>
         </motion.div>
+      </section>
+
+      <section className="landing-mobile mobile-only">
+        <p className="eyebrow">{APP_NAME}</p>
+        <h1>Search any GitHub profile</h1>
+        <p className="landing-mobile-text">Analyze stats, repos, charts and achievements on the go.</p>
+        <form className="search-panel" onSubmit={submit}>
+          <FiSearch />
+          <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="GitHub username" />
+          <button>Analyze</button>
+        </form>
       </section>
 
       <section className="feature-grid">
