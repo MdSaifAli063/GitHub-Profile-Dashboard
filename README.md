@@ -54,6 +54,7 @@ GitLens Pro is a premium React + JavaScript GitHub analytics platform. It turns 
 
 ## Getting Started
 
+
 Install dependencies:
 
 ```bash
