@@ -11,6 +11,8 @@ import { leaderboardProfiles, popularProfiles } from './data/popularProfiles';
 import { accountAge, formatNumber, getAchievements, getAnalytics, getInsights, normalizeUrl, scoreRepo } from './utils/analytics';
 import './styles.css';
 
+const APP_NAME = 'GitPro Hub';
+const APP_TAGLINE = 'GitHub Profile Analytics';
 const DEFAULT_USERNAME = 'octocat';
 const queryClient = new QueryClient();
 const ThemeContext = createContext(null);
@@ -70,8 +72,8 @@ function TopNav() {
       <Link to="/" className="brand-mark">
         <span><FiGithub /></span>
         <div>
-          <b>GitLens Pro</b>
-          <small>AI GitHub Analytics</small>
+          <b>{APP_NAME}</b>
+          <small>{APP_TAGLINE}</small>
         </div>
       </Link>
       <nav className="desktop-nav">
@@ -106,7 +108,7 @@ function Landing() {
   const navigate = useNavigate();
   const [username, setUsername] = useState(DEFAULT_USERNAME);
   const [typed, setTyped] = useState('');
-  const phrase = 'Analyze developers. Rank impact. Export premium GitHub cards.';
+  const phrase = 'Analyze profiles. Track contributions. Export shareable GitHub cards.';
 
   useEffect(() => {
     const id = setInterval(() => setTyped((value) => phrase.slice(0, value.length + 1)), 45);
@@ -124,8 +126,8 @@ function Landing() {
         <div className="particles"><span /><span /><span /><span /></div>
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="hero-copy">
           <div className="hero-logo"><FiGithub /></div>
-          <p className="eyebrow">Premium SaaS GitHub Intelligence</p>
-          <h1>World-class GitHub analytics for modern developers.</h1>
+          <p className="eyebrow">{APP_NAME} — {APP_TAGLINE}</p>
+          <h1>Your GitHub profile, visualized and ranked.</h1>
           <p className="typewriter">{typed}</p>
           <form className="hero-search" onSubmit={submit}>
             <FiSearch />
@@ -142,7 +144,7 @@ function Landing() {
         {[
           ['GitHub Analytics', 'Profile strength, community impact, repository health and growth signals.'],
           ['Contribution Tracking', 'Contribution graph, streak stats, activity trends and active repo analysis.'],
-          ['Repository Intelligence', 'Search, filter, sort and inspect public projects with premium cards.'],
+          ['Repository Intelligence', 'Search, filter, sort and inspect public projects with stat cards.'],
           ['AI Insights', 'Deterministic insight engine for stack, influence, quality and growth trajectory.'],
           ['Developer Ranking', 'Leaderboard-ready scoring for followers, stars, repos and open-source impact.'],
           ['Open Source Impact', 'Stars, forks, watchers, issues, language diversity and achievements.'],
@@ -586,7 +588,7 @@ function QuickLink({ label, to }) {
 }
 
 function SectionTitle({ title, text }) {
-  return <header className="section-title"><p className="eyebrow">GitLens Pro</p><h1>{title}</h1><span>{text}</span></header>;
+  return <header className="section-title"><p className="eyebrow">{APP_NAME}</p><h1>{title}</h1><span>{text}</span></header>;
 }
 
 function ExternalImage({ src, alt }) {
@@ -653,7 +655,7 @@ async function exportCard(user, repos, analytics, achievements) {
   ctx.fillText(`@${user.login}`, 318, 190);
   ctx.fillStyle = '#475569';
   ctx.font = '400 24px Arial';
-  wrap(ctx, user.bio || 'Premium GitHub analytics profile card.', 318, 236, 780, 34, 3);
+  wrap(ctx, user.bio || `${APP_NAME} — GitHub profile analytics card.`, 318, 236, 780, 34, 3);
   [['Followers', user.followers], ['Repos', user.public_repos], ['Stars', analytics.totalStars], ['Forks', analytics.totalForks], ['Top Lang', analytics.topLanguage], ['Achievements', achievements.filter((a) => a.unlocked).length]].forEach(([label, value], index) => {
     const x = 98 + (index % 3) * 370;
     const y = 344 + Math.floor(index / 3) * 112;
@@ -678,9 +680,9 @@ async function exportCard(user, repos, analytics, achievements) {
   wrap(ctx, getInsights(user, repos, analytics).join('  •  '), 98, 694, 1000, 28, 2);
   const link = document.createElement('a');
   link.href = canvas.toDataURL('image/png');
-  link.download = `${user.login}-gitlens-pro-card.png`;
+  link.download = `${user.login}-gitpro-hub-card.png`;
   link.click();
-  toast.success('Premium card downloaded');
+  toast.success('Profile card downloaded');
 }
 
 function loadImage(url) {
