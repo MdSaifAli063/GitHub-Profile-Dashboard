@@ -21,6 +21,7 @@ GitLens Pro is a premium React + JavaScript GitHub analytics platform. It turns 
 - Mobile bottom navigation and responsive SaaS UI
 - Premium PNG profile card export
 
+
 ## Tech Stack
 
 - React 19
