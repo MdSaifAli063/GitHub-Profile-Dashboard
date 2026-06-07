@@ -253,6 +253,7 @@ Repository ranking uses a weighted formula: stars × 3 + forks × 2 + watchers +
 
 ---
 
+
 ## Achievements
 
 | Badge | Unlock condition | Target |
