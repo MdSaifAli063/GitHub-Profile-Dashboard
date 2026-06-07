@@ -334,6 +334,7 @@ These cards are loaded as external images and may occasionally be slow or unavai
 
 ---
 
+
 ## Data & Limitations
 
 - **Public data only** — private repos and private profile fields are not accessible without appropriate scopes.
