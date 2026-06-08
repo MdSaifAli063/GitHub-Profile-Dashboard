@@ -193,7 +193,6 @@ VITE_GITHUB_TOKEN=your_github_token_here
 
 ---
 
-
 ## Routes
 
 | Route | Description |
