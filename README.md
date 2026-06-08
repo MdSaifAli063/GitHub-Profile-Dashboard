@@ -95,7 +95,6 @@ GitPro Hub is a modern React application that turns any public GitHub profile in
 
 ---
 
-
 ## Tech Stack
 
 | Layer | Technology |
