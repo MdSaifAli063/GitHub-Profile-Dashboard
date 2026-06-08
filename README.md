@@ -159,7 +159,6 @@ Preview runs at `http://127.0.0.1:4173` by default.
 
 ---
 
-
 ## Environment Variables
 
 GitPro Hub works without authentication, but GitHub limits unauthenticated requests to **60 per hour**. Adding a token raises the limit to **5,000 per hour**.
