@@ -257,7 +257,6 @@ Repository ranking uses a weighted formula: stars × 3 + forks × 2 + watchers +
 
 ---
 
-
 ## Themes
 
 Six themes are available in **Settings** and persisted in `localStorage`:
