@@ -303,7 +303,6 @@ The active application lives in `src/`. The `card.html` / `card.css` / `card.js`
 
 ---
 
-
 ## External Services
 
 ### GitHub REST API
