@@ -347,7 +347,6 @@ For client-side routing, configure your host to redirect all routes to `index.ht
 
 ---
 
-
 ## License
 
 Open source — available for personal and commercial use.
